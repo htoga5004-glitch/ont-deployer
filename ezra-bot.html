@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONT Deployer | Telkom Helper</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; min-height: 100vh; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { max-width: 500px; width: 100%; background: #ffffff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        h2 { color: #2d3748; margin-bottom: 25px; font-weight: 700; text-align: center; }
+        .input-group { margin-bottom: 15px; }
+        label { font-size: 11px; font-weight: 700; color: #718096; margin-bottom: 6px; display: block; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 12px; border: 1.5px solid #edf2f7; border-radius: 10px; box-sizing: border-box; background: #f8fafc; font-size: 14px; }
+        
+        button#proses { width: 100%; padding: 14px; background: #2d3748; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button#proses:hover { background: #1a202c; }
+        
+        .card { background: #ffffff; border: 1px solid #edf2f7; border-radius: 12px; padding: 18px; margin-top: 15px; transition: 0.2s; }
+        .card:hover { border-color: #cbd5e0; }
+        
+        .btn-wa { display: block; width: 100%; text-align: center; background: #e6fffa; color: #2f855a; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; margin-top: 10px; border: 1px solid #b2f5ea; }
+        .btn-wa:hover { background: #c6f6d5; }
+        
+        .btn-salin { width: 100%; margin-top: 8px; padding: 8px; background: transparent; color: #a0aec0; border: 1px solid #edf2f7; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; }
+        .btn-salin:hover { background: #fff5f5; color: #e53e3e; border-color: #feb2b2; }
+
+        .footer-line { margin: 30px 0; border-top: 1px solid #edf2f7; }
+        .watermark { font-size: 12px; color: #a0aec0; text-align: center; }
+        .watermark b { color: #4a5568; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>ONT Deployer</h2>
+    <div class="input-group">
+        <label>Nama Teknisi</label>
+        <input type="text" id="namaTeknisi" placeholder="Masukkan nama...">
+    </div>
+    <div class="input-group">
+        <label>Data Tiket</label>
+        <textarea id="rawInput" rows="5" placeholder="Paste tiket di sini..."></textarea>
+    </div>
+    <button id="proses" onclick="prosesTiket()">PROSES TIKET</button>
+
+    <div id="tiketList"></div>
+    
+    <div class="footer-line"></div>
+    <div class="watermark">
+        Developer: <a href="https://portofolio-ezra-samson.vercel.app/" target="_blank" style="text-decoration: none; color: #4a5568; font-weight: bold;">ezra.dev</a>
+    </div>
+</div>
+
+<script>
+function prosesTiket() {
+    const namaTeknisi = document.getElementById('namaTeknisi').value || "Teknisi";
+    const rawText = document.getElementById('rawInput').value;
+    const container = document.getElementById('tiketList');
+    container.innerHTML = '';
+    rawText.split(/\n\s*\n/).forEach(block => {
+        if(block.trim() === '') return;
+        let noInternet, nama, noHp;
+        if (block.includes("No. Layanan")) {
+            noInternet = (block.match(/No\. Layanan\s*:\s*(\d+)/) || [])[1];
+            nama = (block.match(/Nama pelanggan\s*:\s*(.*)/) || [])[1];
+            noHp = (block.match(/wa\.me\/(\d+)/) || [])[1];
+        } else {
+            const p = block.split(/\s{2,}/);
+            noInternet = p[0];
+            nama = (p[6] || '') + ' ' + (p[7] || '');
+            noHp = (p[4] || '').replace(/^0/, '62');
+        }
+        if (noInternet) {
+            const template = `Halo Bapak/Ibu, saya ${namaTeknisi} dari Telkom Indonesia. Kami ada program penggantian modem ONT lama ke modem WIFI baru secara GRATIS untuk ID ${noInternet}. Apakah Bapak/Ibu bersedia dijadwalkan untuk penggantian perangkat? Mohon bantuannya untuk share lokasi dan foto lokasi. Terima kasih.`;
+            const dataLaporan = `${noInternet} ${nama}\n${block.trim()}\n\nwa tidak terdaftar`;
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div style="font-weight:700; color:#2d3748;">${nama}</div>
+                <div style="font-size:12px; color:#718096; margin-bottom:10px;">ID: ${noInternet}</div>
+                <a href="https://wa.me/${noHp}?text=${encodeURIComponent(template)}" target="_blank" class="btn-wa">Kirim Pesan WhatsApp</a>
+                <button onclick="copyLaporan('${dataLaporan.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="btn-salin">Salin Data (Jika WA Tidak Terdaftar)</button>`;
+            container.appendChild(card);
+        }
+    });
+}
+function copyLaporan(teks) {
+    navigator.clipboard.writeText(teks).then(() => {
+        // Mengambil ID Layanan dari teks yang disalin untuk ditampilkan di alert
+        const idLayanan = teks.split(' ')[0]; 
+        alert("Laporan untuk ID " + idLayanan + " berhasil disalin! Silakan paste di grup Telegram.");
+    });
+}
+</script>
+</body>
+</html>

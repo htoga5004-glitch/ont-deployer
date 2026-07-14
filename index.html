@@ -58,6 +58,8 @@ function prosesTiket() {
     const container = document.getElementById('tiketList');
     container.innerHTML = '';
     
+    let counter = 1; // Variabel untuk nomor urut
+    
     rawText.split(/\n\s*\n/).forEach(block => {
         if(block.trim() === '') return;
         
@@ -88,16 +90,18 @@ Jika berkenan mohon dibantu share lokasi dan foto lokasinya.
 
 Terima kasih atas perhatian dan kerja samanya.`;
 
-            // MEMBUAT TEKS LAPORAN DENGAN CAPTION OTOMATIS
             const teksLaporan = block.trim() + "\n\nStatus: WA TIDAK TERDAFTAR";
 
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = `<div style="font-weight:700; color:#2d3748;">${namaLengkap || "Pelanggan"}</div>
+            // Menambahkan nomor urut di sini
+            card.innerHTML = `<div style="font-weight:700; color:#2d3748;">${counter}. ${namaLengkap || "Pelanggan"}</div>
                 <div style="font-size:12px; color:#718096; margin-bottom:10px;">ID: ${noInternet}</div>
                 <a href="https://wa.me/${noHp}?text=${encodeURIComponent(template)}" target="_blank" class="btn-wa">Kirim Pesan WhatsApp</a>
                 <button onclick="copyLaporan('${teksLaporan.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="btn-salin">Salin Data (Jika WA Tidak Terdaftar)</button>`;
             container.appendChild(card);
+            
+            counter++; // Tambah angka untuk urutan berikutnya
         }
     });
 }

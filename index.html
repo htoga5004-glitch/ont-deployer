@@ -12,27 +12,14 @@
         h2 { color: #2d3748; margin-bottom: 25px; font-weight: 700; text-align: center; }
         .input-group { margin-bottom: 15px; }
         label { font-size: 11px; font-weight: 700; color: #718096; margin-bottom: 6px; display: block; text-transform: uppercase; }
-        input, textarea { width: 100%; padding: 14px; border: 1.5px solid #edf2f7; border-radius: 10px; box-sizing: border-box; background: #f8fafc; font-size: 16px; -webkit-appearance: none; }
+        input, textarea { width: 100%; padding: 14px; border: 1.5px solid #edf2f7; border-radius: 10px; box-sizing: border-box; background: #f8fafc; font-size: 16px; }
         
         button#proses { width: 100%; padding: 14px; background: #2d3748; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 16px; }
         button#proses:hover { background: #1a202c; }
         
         .card { background: #ffffff; border: 1px solid #edf2f7; border-radius: 12px; padding: 18px; margin-top: 15px; }
-        
-        /* TOMBOL SIMETRIS */
         .btn-wa, .btn-salin {
-            display: block;
-            width: 100%;
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            margin-top: 10px;
-            box-sizing: border-box; /* Kunci agar lebar sama */
-            cursor: pointer;
-            text-decoration: none;
-            border: 1px solid transparent;
+            display: block; width: 100%; text-align: center; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; margin-top: 10px; box-sizing: border-box; cursor: pointer; text-decoration: none; border: 1px solid transparent;
         }
         .btn-wa { background: #e6fffa; color: #2f855a; border-color: #b2f5ea; }
         .btn-salin { background: #f7fafc; color: #a0aec0; border-color: #e2e8f0; }
@@ -60,7 +47,6 @@
     
     <div class="footer-line"></div>
     <div class="watermark">
-        <!-- Ditenagai oleh <b>Telkom Akses Yogyakarta</b><br> -->
         Developer: <a href="https://portofolio-ezra-samson.vercel.app/" target="_blank" style="text-decoration: none; color: #4a5568; font-weight: bold;">ezra.dev</a>
     </div>
 </div>
@@ -72,27 +58,33 @@ function prosesTiket() {
     const container = document.getElementById('tiketList');
     container.innerHTML = '';
     
-    // Split tiket berdasarkan baris kosong (jika ada lebih dari satu tiket)
+    // Split tiket berdasarkan baris kosong
     rawText.split(/\n\s*\n/).forEach(block => {
         if(block.trim() === '') return;
         
-        // Menggunakan Regex untuk mengambil data dari format "Label : Nilai"
-        const noInternet = (block.match(/No\. Layanan\s*:\s*(\d+)/i) || [])[1];
-        const namaLengkap = (block.match(/Nama pelanggan\s*:\s*(.*)/i) || [])[1] || "Pelanggan";
-        const alamatLengkap = (block.match(/Alamat Pelanggan\s*:\s*(.*)/i) || [])[1] || "-";
-        
-        // Mengambil nomor HP dari link wa.me
-        const waMatch = block.match(/wa\.me\/(\d+)/i);
-        const noHp = waMatch ? waMatch[1] : "";
+        let noInternet, namaLengkap, noHp;
+
+        // CEK FORMAT BARU (dengan titik dua)
+        if (block.includes("No. Layanan")) {
+            noInternet = (block.match(/No\. Layanan\s*:\s*(\d+)/i) || [])[1];
+            namaLengkap = (block.match(/Nama pelanggan\s*:\s*(.*)/i) || [])[1];
+            noHp = (block.match(/wa\.me\/(\d+)/i) || [])[1];
+        } 
+        // CEK FORMAT LAMA (berbasis kolom/spasi)
+        else {
+            const p = block.split(/\s{2,}/);
+            noInternet = p[0];
+            noHp = (p[4] || '').replace(/^0/, '62');
+            namaLengkap = (p[6] || '') + ' ' + (p[7] || '');
+        }
 
         if (noInternet) {
-            const template = `Selamat Pagi Bapak/Ibu ${namaLengkap},
+            const template = `Selamat Pagi Bapak/Ibu,
 Perkenalkan, saya ${namaTeknisi} dari Telkom Indonesia (STO TELKOM PUGERAN).
 
 Kami menghubungi Bapak/Ibu terkait program penggantian perangkat/modem ONT lama ke ONT/MODEM WIFI baru secara GRATIS, dengan detail pelanggan sbb:
 
-ID Layanan: ${noInternet}
-Alamat: ${alamatLengkap}
+${block.trim()}
 
 Proses penggantian akan dilakukan langsung oleh teknisi resmi Telkom. Apakah Bapak/Ibu bersedia dijadwalkan untuk penggantian ONT/MODEM WIFInya?
 
@@ -100,23 +92,20 @@ Jika berkenan mohon dibantu share lokasi dan foto lokasinya.
 
 Terima kasih atas perhatian dan kerja samanya.`;
 
-            const dataLaporan = `LAPORAN PENUGASAN\nTeknisi: ${namaTeknisi}\n\nDATA TIKET:\n${block.trim()}\n\nStatus: Menunggu konfirmasi pelanggan`;
-
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = `<div style="font-weight:700; color:#2d3748;">${namaLengkap}</div>
+            card.innerHTML = `<div style="font-weight:700; color:#2d3748;">${namaLengkap || "Pelanggan"}</div>
                 <div style="font-size:12px; color:#718096; margin-bottom:10px;">ID: ${noInternet}</div>
                 <a href="https://wa.me/${noHp}?text=${encodeURIComponent(template)}" target="_blank" class="btn-wa">Kirim Pesan WhatsApp</a>
-                <button onclick="copyLaporan('${dataLaporan.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="btn-salin">Salin Data Lengkap (Tiket)</button>`;
+                <button onclick="copyLaporan('${block.trim().replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="btn-salin">Salin Data Lengkap</button>`;
             container.appendChild(card);
-        } else {
-            alert("Format tiket tidak dikenali. Pastikan ada 'No. Layanan : ...'");
         }
     });
 }
+
 function copyLaporan(teks) {
     navigator.clipboard.writeText(teks).then(() => {
-        alert("Data laporan berhasil disalin! Silakan paste di grup Telegram.");
+        alert("Data berhasil disalin!");
     });
 }
 </script>
